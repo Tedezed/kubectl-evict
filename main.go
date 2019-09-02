@@ -74,7 +74,8 @@ func main() {
 	//flag.Parse()
 
 	//if len(flag.Args()) != 1 {
-	if (namespace == "") {
+	//fmt.Println(len(command.Rest))
+	if ((namespace == "") || (len(command.Rest) != 1)) {
 		fmt.Println("USAGE: kubectl evict POD_NAME [--namespace NAMESPACE]")
 		os.Exit(1)
 	}

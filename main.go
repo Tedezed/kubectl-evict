@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 
@@ -10,6 +9,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/tools/clientcmd"
+
+	"./lib"
 )
 
 const (
@@ -21,8 +22,12 @@ var (
 	verbose   = false
 )
 
-func main() {
+type (
+	ArgOutput = parse_args.ArgOutput
+	ArgStruct = parse_args.ArgStruct
+)
 
+func main() {
 	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
 	configOverrides := &clientcmd.ConfigOverrides{}
 	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides)
@@ -32,15 +37,49 @@ func main() {
 	// 	panic(err.Error())
 	// }
 
-	flag.StringVar(&namespace, "namespace", currentNamespace, "namespace of the pod")
-	flag.BoolVar(&verbose, "verbose", false, "show more details")
-	flag.Parse()
+	var command ArgOutput
+	format_namespace := []string {"--namespace", "-n"}
+	fromat_verbose := []string {"--verbose", "-v"}
+	var to_find = []ArgStruct {
+		ArgStruct {
+			Name: "namespace",
+			Format: format_namespace,
+			GetNext: true,
+		},
+		ArgStruct {
+			Name: "verbose",
+			Format: fromat_verbose,
+			GetNext: false,
+		},
+	}
 
-	if len(flag.Args()) != 1 {
-		fmt.Println("USAGE: kubectl evict [--namespace NAMESPACE] POD_NAME")
+    argsWithoutProg := os.Args[1:]
+    command = parse_args.ParseArgs(argsWithoutProg, to_find)
+
+    if (command.ArgMap["namespace"] != "") {
+    	namespace = command.ArgMap["namespace"]
+    } else {
+    	namespace = currentNamespace
+    }
+
+    if (command.ArgMap["verbose"] != "") {
+    	verbose = true
+    }
+    //fmt.Println(command.Rest[0], command.ArgMap["namespace"], command.ArgMap["verbose"])
+
+
+
+	//flag.StringVar(&namespace, "namespace", currentNamespace, "namespace of the pod")
+	//flag.BoolVar(&verbose, "verbose", false, "show more details")
+	//flag.Parse()
+
+	//if len(flag.Args()) != 1 {
+	if (command.ArgMap["namespace"] == "") {
+		fmt.Println("USAGE: kubectl evict POD_NAME [--namespace NAMESPACE]")
 		os.Exit(1)
 	}
-	podName := flag.Args()[0]
+	//podName := flag.Args()[0]
+	podName := command.Rest[0]
 
 	rawConfig, err := kubeConfig.RawConfig()
 	if err != nil {

@@ -22,9 +22,9 @@ func RemoveIndex(s []string, index int) []string {
 }
 
 func ParseArgs(input_args []string, to_find []ArgStruct) (end_output ArgOutput) {
+	var output []string
 	GetNext := false
 	found := ""
-	var output []string
 	to_output := true
 	output_map := make(map[string]string)
 	//
@@ -41,6 +41,7 @@ func ParseArgs(input_args []string, to_find []ArgStruct) (end_output ArgOutput) 
 				_ = find_i
 				for format_i, format_a := range find_a.Format {
 					_ = format_i
+					//fmt.Println(format_a, in_a)
 					if (format_a == in_a) {
 						found = find_a.Name
 						if (find_a.GetNext) {
@@ -53,6 +54,15 @@ func ParseArgs(input_args []string, to_find []ArgStruct) (end_output ArgOutput) 
 						to_output = false
 						break
 					}
+				}
+				if !(to_output) {
+					break
+				}
+			}
+			if (to_output) {
+				if (in_a[:2] == "--") || (in_a[:1] == "-") {
+					fmt.Println("Unrecognized parameter:", in_a)
+					os.Exit(1)
 				}
 			}
 		}
